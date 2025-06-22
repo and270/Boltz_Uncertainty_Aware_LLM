@@ -134,7 +134,7 @@ def replace_attention_layers(model, lm_head):
         layer.self_attn = new_attention
     return model
 
-def load_model_for_inference(checkpoint_path, base_model_name="Qwen/Qwen2-1.5B-Instruct"):
+def load_model_for_inference(checkpoint_path, base_model_name="Qwen/Qwen2.5-1.5B-Instruct"):
     """
     Loads a model with a custom architecture from a checkpoint.
     This function first loads the base model, patches it with the custom TwoPassAttention
@@ -271,8 +271,8 @@ def generate_answer(model, tokenizer, question, max_new_tokens=2048, analyze_wei
 def main():
     # --- Hardcoded for notebook execution ---
     # Use the path to your fine-tuned model checkpoint
-    checkpoint_path = "./Qwen2-1.5b-two-pass-sft/checkpoint-200/"
-    base_model_name = "Qwen/Qwen2-1.5B-Instruct"  # Base model for tokenizer
+    checkpoint_path = "./Qwen2.5-1.5b-two-pass-sft/checkpoint-200/"
+    base_model_name = "Qwen/Qwen2.5-1.5B-Instruct"  # Base model for tokenizer
 
     # Set a prompt here to run on a single question, or leave as None for interactive mode
     # Example: prompt = "What is the capital of France?"

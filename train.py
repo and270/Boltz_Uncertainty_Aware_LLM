@@ -56,16 +56,16 @@ if torch.cuda.is_available():
 # ==============================================================================
 # Training configuration for the Two-Pass Attention model
 CONFIG = {
-    'model_name': 'Qwen/Qwen2-1.5B-Instruct',
+    'model_name': 'Qwen/Qwen2.5-1.5B-Instruct',
     'dataset_name': 'open-r1/OpenR1-Math-220k',
-    'output_dir': './Qwen2-1.5b-two-pass-sft',
+    'output_dir': './Qwen2.5-1.5b-two-pass-sft',
     'training_epochs': 1,
     'batch_size': 1,  # Smaller batch size due to increased memory usage of two-pass attention
     'gradient_accumulation_steps': 8, # Increase accumulation to maintain effective batch size
     'learning_rate': 1e-5,
     'max_seq_length': 2048,
     'wandb_project': 'uncertainty-aware-transformers',
-    'wandb_name': f'Qwen2-1.5b-two-pass-sft-{datetime.now().strftime("%Y%m%d-%H%M%S")}',
+    'wandb_name': f'Qwen2.5-1.5b-two-pass-sft-{datetime.now().strftime("%Y%m%d-%H%M%S")}',
 }
 
 print("Training Configuration for Two-Pass Model:")

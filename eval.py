@@ -15,8 +15,8 @@ from transformers.models.qwen2.modeling_qwen2 import Qwen2Attention, apply_rotar
 # CONFIG
 # ==============================================================================
 CONFIG = {
-    'model_name': 'Qwen/Qwen2-1.5B-Instruct',
-    'output_dir': './Qwen2-1.5b-two-pass-sft',
+    'model_name': 'Qwen/Qwen2.5-1.5B-Instruct',
+    'output_dir': './Qwen2.5-1.5b-two-pass-sft',
     'max_seq_length': 2048,
     'EVALUATE_BASE_MODEL': True,  # Set to False to only evaluate the trained model
     'PRINT_INTERVAL': 5,         # Print progress every N samples
