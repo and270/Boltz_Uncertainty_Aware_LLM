@@ -131,12 +131,12 @@ def replace_attention_layers(model, lm_head):
         layer.self_attn = new_attention
     return model
 
-def load_model_for_inference(checkpoint_path):
-    """Loads tokenizer and patched model from a checkpoint."""
-    print(f"Loading tokenizer from: {checkpoint_path}")
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
+def load_model_for_inference(checkpoint_path, base_model_name="Qwen/Qwen2-1.5B-Instruct"):
+    """Loads tokenizer from base model and patched model from a checkpoint."""
+    print(f"Loading tokenizer from base model: {base_model_name}")
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
 
-    print(f"Loading model from: {checkpoint_path}")
+    print(f"Loading model weights from: {checkpoint_path}")
     # Load model on CPU first to avoid memory issues and allow architecture modification
     model = AutoModelForCausalLM.from_pretrained(
         checkpoint_path,
@@ -238,20 +238,30 @@ def generate_answer(model, tokenizer, question, max_new_tokens=2048, analyze_wei
 # Main Inference Script
 # ==============================================================================
 def main():
-    parser = argparse.ArgumentParser(description="Run inference with a Two-Pass Attention model checkpoint.")
-    parser.add_argument("checkpoint_path", type=str, help="Path to the model checkpoint directory.")
-    parser.add_argument("--prompt", type=str, help="The prompt to send to the model. If not provided, runs in interactive mode.")
-    parser.add_argument(
-        "--analyze_weights_influence",
-        action="store_true",
-        help="If set, analyze and print the influence of uncertainty gates during generation."
-    )
-    args = parser.parse_args()
+    # --- Hardcoded for notebook execution ---
+    # Use the path to your fine-tuned model checkpoint
+    checkpoint_path = "./Qwen2-1.5b-two-pass-sft/checkpoint-200/"
+    base_model_name = "Qwen/Qwen2-1.5B-Instruct"  # Base model for tokenizer
 
-    model, tokenizer = load_model_for_inference(args.checkpoint_path)
+    # Set a prompt here to run on a single question, or leave as None for interactive mode
+    # Example: prompt = "What is the capital of France?"
+    prompt = None
 
-    if args.prompt:
-        response = generate_answer(model, tokenizer, args.prompt, max_new_tokens=2048, analyze_weights_influence=args.analyze_weights_influence)
+    # Set to True to analyze the influence of the uncertainty gates
+    analyze_weights_influence = False
+    # --- End of hardcoded section ---
+
+    print(f"Using checkpoint: {checkpoint_path}")
+    model, tokenizer = load_model_for_inference(checkpoint_path, base_model_name=base_model_name)
+
+    if prompt:
+        response = generate_answer(
+            model,
+            tokenizer,
+            prompt,
+            max_new_tokens=2048,
+            analyze_weights_influence=analyze_weights_influence
+        )
         print("\n" + "="*80)
         print("Model Response:")
         print("="*80)
@@ -266,7 +276,13 @@ def main():
                 question = input("\nPrompt: ")
                 if question.lower() in ["exit", "quit"]:
                     break
-                response = generate_answer(model, tokenizer, question, max_new_tokens=2048, analyze_weights_influence=args.analyze_weights_influence)
+                response = generate_answer(
+                    model,
+                    tokenizer,
+                    question,
+                    max_new_tokens=2048,
+                    analyze_weights_influence=analyze_weights_influence
+                )
                 print("\n" + "-"*50)
                 print("Response:")
                 print(response)
