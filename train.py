@@ -321,7 +321,7 @@ assert len(devices) == 1 and next(iter(devices)) == torch.device('cuda:0'), "Mod
 # ==============================================================================
 print(f"\nLoading dataset: {CONFIG['dataset_name']}")
 dataset = load_dataset(CONFIG['dataset_name'])
-dataset['train'] = dataset['train'].select(range(2000))
+#dataset['train'] = dataset['train'].select(range(2000))
 
 def tokenize_function(examples):
     """
@@ -513,7 +513,7 @@ def generate_answer(model, tokenizer, question, max_new_tokens=2048):
 # --- Main Evaluation Logic ---
 (original_model, original_tokenizer), (two_pass_model, two_pass_tokenizer) = load_and_prepare_models_for_eval()
 gsm8k_dataset = load_dataset("gsm8k", "main")
-test_samples = gsm8k_dataset["test"].select(range(100)) # Evaluate on 100 samples
+test_samples = gsm8k_dataset["test"].select(range(300)) # Evaluate on 300 samples
 
 results = []
 original_correct, two_pass_correct = 0, 0
