@@ -1,11 +1,14 @@
 import argparse
 import sys
+import glob
+import os
 import torch
 import torch.nn as nn
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
 )
+from safetensors.torch import load_file
 from transformers.models.qwen2.modeling_qwen2 import Qwen2Attention, apply_rotary_pos_emb, repeat_kv
 
 # ==============================================================================
@@ -132,27 +135,55 @@ def replace_attention_layers(model, lm_head):
     return model
 
 def load_model_for_inference(checkpoint_path, base_model_name="Qwen/Qwen2-1.5B-Instruct"):
-    """Loads tokenizer from base model and patched model from a checkpoint."""
+    """
+    Loads a model with a custom architecture from a checkpoint.
+    This function first loads the base model, patches it with the custom TwoPassAttention
+    architecture, and then loads the fine-tuned weights from the checkpoint.
+    """
     print(f"Loading tokenizer from base model: {base_model_name}")
     tokenizer = AutoTokenizer.from_pretrained(base_model_name)
 
-    print(f"Loading model weights from: {checkpoint_path}")
-    # Load model on CPU first to avoid memory issues and allow architecture modification
+    print(f"Loading base model architecture from: {base_model_name}")
+    # 1. Load the base model architecture and its pretrained weights
     model = AutoModelForCausalLM.from_pretrained(
-        checkpoint_path,
+        base_model_name,
         torch_dtype=torch.float32,
         device_map={'': 'cpu'}
     )
     
-    # Add a padding token if it doesn't exist
+    # Add a padding token if it doesn't exist (important for tokenizer consistency)
     if tokenizer.pad_token is None:
         tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
         model.resize_token_embeddings(len(tokenizer))
         model.config.pad_token_id = tokenizer.pad_token_id
 
-    print("Patching model with TwoPassAttention...")
+    print("Patching model with TwoPassAttention architecture...")
+    # 2. Replace the standard attention layers with our custom ones.
+    # The gate weights are currently zero-initialized.
     model = replace_attention_layers(model, model.lm_head)
     
+    print(f"Loading fine-tuned weights from checkpoint: {checkpoint_path}")
+    # 3. Load the state dictionary from the checkpoint file(s).
+    safetensor_files = glob.glob(os.path.join(checkpoint_path, "*.safetensors"))
+    if not safetensor_files:
+        raise OSError(f"No .safetensors files found in {checkpoint_path}")
+        
+    checkpoint_state_dict = {}
+    for f in sorted(safetensor_files): # Sort to ensure consistent loading order
+        checkpoint_state_dict.update(load_file(f, device="cpu"))
+        
+    # 4. Load the checkpoint weights into our patched model.
+    # `strict=False` allows us to load a partial state dict. The checkpoint contains
+    # only the trained weights, which will correctly overwrite the base weights
+    # and fill in our custom gate weights.
+    incompatible_keys = model.load_state_dict(checkpoint_state_dict, strict=False)
+    
+    # Report any keys that didn't match, which can be useful for debugging.
+    if incompatible_keys.missing_keys:
+        print(f"Warning: Missing keys in state_dict: {incompatible_keys.missing_keys}")
+    if incompatible_keys.unexpected_keys:
+        print(f"Warning: Unexpected keys in state_dict: {incompatible_keys.unexpected_keys}")
+
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     print(f"Moving model to {device}...")
     model = model.to(device)
