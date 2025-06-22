@@ -248,7 +248,7 @@ def main():
     prompt = None
 
     # Set to True to analyze the influence of the uncertainty gates
-    analyze_weights_influence = False
+    analyze_weights_influence = True
     # --- End of hardcoded section ---
 
     print(f"Using checkpoint: {checkpoint_path}")
