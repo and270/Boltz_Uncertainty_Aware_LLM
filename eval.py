@@ -214,6 +214,7 @@ for i, example in enumerate(tqdm(test_samples, desc="Evaluating GSM8K")):
     result_data = {
         'question': question,
         'true_answer': true_answer,
+        'two_pass_answer_text': two_pass_answer_text,
         'two_pass_answer': two_pass_answer,
         'two_pass_correct': two_pass_is_correct
     }
@@ -225,6 +226,7 @@ for i, example in enumerate(tqdm(test_samples, desc="Evaluating GSM8K")):
         original_is_correct = abs(original_answer - true_answer) < 0.01 if original_answer is not None and true_answer is not None else False
         if original_is_correct:
             original_correct += 1
+        result_data['original_answer_text'] = original_answer_text
         result_data['original_answer'] = original_answer
         result_data['original_correct'] = original_is_correct
 
